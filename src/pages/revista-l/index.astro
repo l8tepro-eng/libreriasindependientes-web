@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import RevistaCard from '../../components/RevistaCard.astro';
+import { getRevistas } from '../../lib/data.mjs';
+
+const revistas = await getRevistas();
+const anios = [...new Set(revistas.map((r) => r.anio).filter(Boolean))].sort((a, b) => b - a);
+const porAnio = anios.map((a) => ({ anio: a, lista: revistas.filter((r) => r.anio === a) }));
+const sinAnio = revistas.filter((r) => !r.anio);
+---
+<Base titulo="Revista L" descripcion="Archivo completo de la Revista L de Librerías Independientes: todos los números para leer en línea y descargar.">
+  <section class="cabecera-pagina">
+    <div class="contenedor">
+      <span class="antetitulo">Archivo</span>
+      <h1>Revista L</h1>
+      <p class="entradilla">{revistas.length} números desde {anios.at(-1)}. Las novedades y recomendaciones de los libreros independientes, cuatro veces al año.</p>
+      <div class="filtros" role="group" aria-label="Filtrar revistas">
+        <label>Año
+          <select data-filtro="anio">
+            <option value="">Todos</option>
+            {anios.map((a) => <option value={a}>{a}</option>)}
+          </select>
+        </label>
+        <label>Temporada
+          <select data-filtro="temporada">
+            <option value="">Todas</option>
+            <option value="primavera">Primavera</option>
+            <option value="verano">Verano</option>
+            <option value="otono">Otoño</option>
+            <option value="invierno">Navidad</option>
+            <option value="especial">Especiales</option>
+          </select>
+        </label>
+        <label>Idioma
+          <select data-filtro="idioma">
+            <option value="">Todos</option>
+            <option value="es">Castellano</option>
+            <option value="ca">Català</option>
+          </select>
+        </label>
+        <span class="filtros__total" aria-live="polite"><span data-cuenta>{revistas.length}</span> revistas</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="contenedor archivo">
+    {porAnio.map(({ anio, lista }) => (
+      <section class="archivo__anio" data-bloque-anio={anio}>
+        <h2 class="archivo__titulo">{anio}</h2>
+        <div class="archivo__rejilla">
+          {lista.map((r) => <RevistaCard revista={r} />)}
+        </div>
+      </section>
+    ))}
+    {sinAnio.length > 0 && (
+      <section class="archivo__anio" data-bloque-anio="">
+        <h2 class="archivo__titulo">Otros</h2>
+        <div class="archivo__rejilla">{sinAnio.map((r) => <RevistaCard revista={r} />)}</div>
+      </section>
+    )}
+  </div>
+</Base>
+
+<script>
+  const selects = document.querySelectorAll<HTMLSelectElement>('[data-filtro]');
+  const aplicar = () => {
+    const f: Record<string, string> = {};
+    selects.forEach((s) => (f[s.dataset.filtro!] = s.value));
+    let n = 0;
+    document.querySelectorAll<HTMLElement>('.archivo__anio').forEach((bloque) => {
+      let visibles = 0;
+      bloque.querySelectorAll<HTMLElement>('.tarjeta').forEach((t) => {
+        const ok = Object.entries(f).every(([k, v]) => !v || t.dataset[k] === v);
+        t.parentElement!.hidden = false;
+        t.hidden = !ok;
+        if (ok) visibles++;
+      });
+      bloque.hidden = visibles === 0;
+      n += visibles;
+    });
+    document.querySelector('[data-cuenta]')!.textContent = String(n);
+  };
+  selects.forEach((s) => s.addEventListener('change', aplicar));
+</script>
+
+<style>
+  .cabecera-pagina { padding: clamp(48px, 7vw, 90px) 0 36px; border-bottom: 1px solid var(--linea); }
+  .filtros { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-top: 32px; }
+  .filtros label { display: grid; gap: 4px; font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-2); }
+  .filtros select { font: inherit; font-size: .95rem; letter-spacing: 0; text-transform: none; color: var(--tinta); padding: .6em 2.2em .6em .9em; border: 1px solid var(--linea); border-radius: 999px; background: var(--blanco); min-width: 150px; }
+  .filtros__total { margin-left: auto; font-size: .9rem; color: var(--tinta-2); }
+  .archivo { padding-bottom: 100px; }
+  .archivo__anio { display: grid; grid-template-columns: 160px 1fr; gap: 32px; padding: 48px 0; border-bottom: 1px solid var(--linea); }
+  .archivo__anio[hidden] { display: none; }
+  .archivo__titulo { font-size: clamp(2.4rem, 5vw, 4rem); color: var(--acento); position: sticky; top: 100px; align-self: start; font-variation-settings: 'opsz' 144; }
+  .archivo__rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 36px 26px; }
+  .archivo__rejilla :global(.tarjeta[hidden]) { display: none; }
+  @media (max-width: 700px) {
+    .archivo__anio { grid-template-columns: 1fr; gap: 12px; }
+    .archivo__titulo { position: static; }
+    .archivo__rejilla { grid-template-columns: repeat(2, 1fr); gap: 28px 18px; }
+    .filtros__total { margin-left: 0; }
+  }
+</style>
