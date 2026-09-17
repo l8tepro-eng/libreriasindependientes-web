@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import { getLibrerias, url } from '../lib/data.mjs';
+const librerias = await getLibrerias();
+const servicios = ['Gestión administrativa directa', 'Negociación comercial', 'Compras coordinadas', 'Lanzamientos de producto', 'Campañas promocionales', 'Interlocución con editores y distribuidores', 'Revista comercial con catálogo de novedades'];
+---
+<Base titulo="Quiénes somos" descripcion="Librerías Independientes: desde 1997, central de compras y servicios de más de un centenar de librerías de referencia.">
+  <section class="seccion">
+    <div class="contenedor qs">
+      <div>
+        <span class="antetitulo">Desde 1997</span>
+        <h1>Defendemos la diversidad cultural, librería a librería</h1>
+      </div>
+      <div class="qs__texto">
+        <p class="entradilla">Librerías Independientes es un proyecto que engloba a más de un centenar de librerías de referencia en más de 60 ciudades de todo el territorio nacional.</p>
+        <p>Nació en 1997 como iniciativa para defender la diversidad cultural y crear una marca de prestigio basada en la calidad del servicio al cliente, con especialistas en todas las áreas del sector editorial.</p>
+        <p>Como central de compras y servicios, coordina la adquisición centralizada de novedades y promociones y realiza los pagos a proveedores. Hoy agrupa a las librerías independientes de mayor reconocimiento del país y es una de las fuerzas más significativas del sector por volumen de negocio.</p>
+      </div>
+    </div>
+  </section>
+  <section class="seccion seccion--crema">
+    <div class="contenedor">
+      <span class="antetitulo">Qué hacemos</span>
+      <h2>Servicios para las librerías asociadas</h2>
+      <ul class="servicios">{servicios.map((s) => <li>{s}</li>)}</ul>
+      <div class="qs__cta">
+        <a class="boton" href={url('/asociados')}>Conoce las {librerias.length} librerías <span class="flecha">→</span></a>
+        <a class="boton boton--claro" href={url('/asociacion-libreros')}>Únete a la red</a>
+      </div>
+    </div>
+  </section>
+</Base>
+<style>
+  .qs { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  .qs__texto p:not(.entradilla) { max-width: 60ch; }
+  .servicios { list-style: none; padding: 0; margin: 36px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 32px; }
+  .servicios li { font-family: var(--serif); font-size: 1.3rem; padding: 16px 0; border-bottom: 1px solid var(--linea); }
+  .qs__cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 800px) { .qs { grid-template-columns: 1fr; gap: 24px; } }
+</style>

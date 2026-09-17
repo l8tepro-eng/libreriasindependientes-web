@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import Formulario from '../components/Formulario.astro';
+---
+<Base titulo="Contacto">
+  <section class="seccion">
+    <div class="contenedor contacto">
+      <div>
+        <span class="antetitulo">Contacto</span>
+        <h1>Hablemos</h1>
+        <p class="entradilla">Para libreros, editoriales, distribuidores y lectores.</p>
+        <address>
+          <strong>Librerías Independientes</strong><br />
+          C/ Villanueva 33, 3º Izqda.<br />28001 Madrid
+        </address>
+      </div>
+      <Formulario tipo="contacto" />
+    </div>
+  </section>
+</Base>
+<style>
+  .contacto { display: grid; grid-template-columns: .8fr 1.2fr; gap: 64px; }
+  address { font-style: normal; margin-top: 32px; line-height: 1.7; }
+  @media (max-width: 800px) { .contacto { grid-template-columns: 1fr; gap: 32px; } }
+</style>
