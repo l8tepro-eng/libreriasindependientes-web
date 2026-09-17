@@ -1,0 +1,90 @@
+name: Desplegar web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      refrescar:
+        description: 'Volver a extraer el contenido de la web actual'
+        type: boolean
+        default: false
+  repository_dispatch:
+    types: [sanity-publish]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+  SANITY_DATASET: ${{ vars.SANITY_DATASET || 'production' }}
+  BASE_PATH: ${{ vars.BASE_PATH || format('/{0}', github.event.repository.name) }}
+  SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund 2>&1 | tee -a ci.log
+
+      - name: Extraer contenido de la web actual
+        if: ${{ inputs.refrescar || hashFiles('src/data/librerias.json') == '' }}
+        run: node scripts/scrape.mjs 2>&1 | tee -a ci.log
+
+      - name: Guardar datos extraídos en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/revistas.json src/data/librerias.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Datos extraídos de la web actual [skip ci]"
+            git push
+          fi
+
+      - name: Descargar PDFs para el visor
+        run: node scripts/fetch-pdfs.mjs 2>&1 | tee -a ci.log
+
+      - name: Compilar
+        run: npm run build 2>&1 | tee -a ci.log
+
+      - name: Guardar registro si falla
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/logs && cp ci.log /tmp/logs/ultimo-error.log || echo "sin log" > /tmp/logs/ultimo-error.log
+          git checkout --orphan ci-logs-tmp
+          git rm -rf --cached . > /dev/null
+          cp /tmp/logs/ultimo-error.log ./ultimo-error.log
+          git add ultimo-error.log
+          git commit -m "Registro de error ${GITHUB_RUN_ID}"
+          git push -f origin HEAD:ci-logs
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

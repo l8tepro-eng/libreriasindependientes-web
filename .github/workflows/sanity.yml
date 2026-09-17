@@ -1,0 +1,72 @@
+name: Sanity (importar contenido y publicar Studio)
+
+on:
+  workflow_dispatch:
+    inputs:
+      importar:
+        description: 'Importar revistas y librerías en Sanity'
+        type: boolean
+        default: true
+      studio:
+        description: 'Publicar el panel (Studio) en sanity.studio'
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - 'studio/**'
+      - '.github/workflows/sanity.yml'
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+  SANITY_DATASET: ${{ vars.SANITY_DATASET || 'production' }}
+
+jobs:
+  sanity:
+    if: ${{ vars.SANITY_PROJECT_ID != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Importar contenido
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.importar }}
+        env:
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+        run: |
+          npm install --no-audit --no-fund 2>&1 | tee -a ci.log
+          node scripts/import-sanity.mjs 2>&1 | tee -a ci.log
+
+      - name: Publicar Studio
+        if: ${{ github.event_name == 'push' || inputs.studio }}
+        working-directory: studio
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_DEPLOY_TOKEN }}
+          SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+          SANITY_STUDIO_DATASET: ${{ vars.SANITY_DATASET || 'production' }}
+          SANITY_STUDIO_HOSTNAME: ${{ vars.SANITY_STUDIO_HOSTNAME || 'libreriasindependientes' }}
+        run: |
+          npm install --no-audit --no-fund 2>&1 | tee -a ../ci.log
+          npx sanity deploy --yes 2>&1 | tee -a ../ci.log
+
+      - name: Guardar registro si falla
+        if: failure()
+        run: |
+          cp ci.log /tmp/sanity-error.log 2>/dev/null || echo "sin log" > /tmp/sanity-error.log
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan ci-logs-tmp
+          git rm -rf --cached . > /dev/null
+          cp /tmp/sanity-error.log ./ultimo-error.log
+          git add ultimo-error.log
+          git commit -m "Registro de error Sanity ${GITHUB_RUN_ID}"
+          git push -f origin HEAD:ci-logs
