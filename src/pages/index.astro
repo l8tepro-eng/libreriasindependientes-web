@@ -1,0 +1,151 @@
+---
+import Base from '../layouts/Base.astro';
+import Visor from '../components/Visor.astro';
+import RevistaCard from '../components/RevistaCard.astro';
+import Mapa from '../components/Mapa.astro';
+import { getRevistas, getLibrerias, url, nombreTemporada } from '../lib/data.mjs';
+
+const revistas = await getRevistas();
+const librerias = await getLibrerias();
+const castellano = revistas.filter((r) => r.idioma === 'es');
+const ultima = castellano[0] ?? revistas[0];
+const catalana = ultima && revistas.find((r) => r.idioma === 'ca' && r.numero === ultima.numero);
+const recientes = castellano.slice(1, 5);
+const ciudades = new Set(librerias.map((l) => (l.ciudad || '').toLowerCase()).filter(Boolean)).size;
+const comunidades = new Set(librerias.map((l) => l.comunidad).filter(Boolean)).size;
+const anios = new Date().getFullYear() - 1997;
+---
+<Base imagen={ultima?.portada}>
+  <!-- HERO: la última revista -->
+  {ultima && (
+    <section class="hero">
+      <div class="contenedor hero__rejilla">
+        <div class="hero__texto">
+          <span class="antetitulo">Revista L · Nuevo número</span>
+          <h1>{nombreTemporada(ultima)} {ultima.anio}<br /><em>en tu librería</em></h1>
+          <p class="entradilla">
+            {ultima.descripcion || 'Las novedades y recomendaciones de los libreros independientes, en papel en más de cien librerías y aquí, para leer en línea.'}
+          </p>
+          <div class="hero__acciones">
+            <a class="boton" href="#leer">Leer la revista <span class="flecha">→</span></a>
+            {catalana && <a class="boton boton--claro" href={url(`/revista-l/${catalana.slug}`)}>Versió en català</a>}
+          </div>
+          <p class="hero__numero">Nº {ultima.numero} · {ultima.subtitulo}</p>
+        </div>
+        <a href="#leer" class="hero__portada" aria-hidden="true" tabindex="-1">
+          <img src={ultima.portada} alt="" width="520" height="728" />
+        </a>
+      </div>
+    </section>
+  )}
+
+  <!-- CIFRAS -->
+  <section class="cifras">
+    <div class="contenedor cifras__fila">
+      <div><strong>{librerias.length}</strong><span>librerías asociadas</span></div>
+      <div><strong>{ciudades}</strong><span>ciudades</span></div>
+      <div><strong>{comunidades}</strong><span>comunidades autónomas</span></div>
+      <div><strong>{anios}</strong><span>años de historia</span></div>
+    </div>
+  </section>
+
+  <!-- VISOR -->
+  {ultima && (
+    <section class="seccion seccion--oscura" id="leer">
+      <div class="contenedor">
+        <div class="cabecera-seccion">
+          <div>
+            <span class="antetitulo">Léela aquí</span>
+            <h2>{ultima.titulo}</h2>
+          </div>
+          <a class="boton" href={url('/revista-l')}>Todas las revistas <span class="flecha">→</span></a>
+        </div>
+        <Visor pdf={ultima.pdfVisor} titulo={ultima.titulo} portada={ultima.portada} descarga={ultima.pdf} />
+      </div>
+    </section>
+  )}
+
+  <!-- CUATRO ESTACIONES -->
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="cabecera-seccion">
+        <div>
+          <span class="antetitulo">Cuatro números al año</span>
+          <h2>Una revista para cada estación</h2>
+          <p class="entradilla">Primavera, verano, otoño y Navidad: la selección de los libreros llega cada temporada, en castellano y en catalán.</p>
+        </div>
+        <a class="boton boton--claro" href={url('/revista-l')}>Ver el archivo completo <span class="flecha">→</span></a>
+      </div>
+      <div class="rejilla-revistas">
+        {recientes.map((r) => <RevistaCard revista={r} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="seccion seccion--crema">
+    <div class="contenedor mapa-home">
+      <div>
+        <span class="antetitulo">La red</span>
+        <h2>Hay una librería independiente cerca de ti</h2>
+        <p class="entradilla">{librerias.length} librerías de referencia en {ciudades} ciudades. Libreros de verdad, que leen, recomiendan y hacen barrio.</p>
+        <a class="boton" href={url('/asociados')}>Buscar mi librería <span class="flecha">→</span></a>
+      </div>
+      <Mapa librerias={librerias} compacto />
+    </div>
+  </section>
+
+  <!-- ÚNETE -->
+  <section class="seccion seccion--oscura">
+    <div class="contenedor unete">
+      <div>
+        <span class="antetitulo">¿Tienes una librería?</span>
+        <h2>Súmate al mayor grupo de librerías independientes</h2>
+      </div>
+      <div>
+        <ul class="ventajas">
+          <li><strong>Compras centralizadas</strong> Mejores condiciones con editoriales y distribuidores.</li>
+          <li><strong>Campañas y promociones</strong> Revista L, Promociones L y acciones conjuntas todo el año.</li>
+          <li><strong>Gestión y pagos</strong> Pagos a proveedores y gestión administrativa desde la central.</li>
+          <li><strong>Comunidad</strong> Más de cien libreros compartiendo experiencia.</li>
+        </ul>
+        <a class="boton" href={url('/asociacion-libreros')}>Quiero unirme <span class="flecha">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding: clamp(40px, 7vw, 96px) 0 clamp(48px, 7vw, 90px); overflow: hidden; }
+  .hero__rejilla { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(32px, 6vw, 90px); align-items: center; }
+  .hero h1 em { font-style: italic; color: var(--acento); font-weight: 400; }
+  .hero__acciones { display: flex; gap: 12px; flex-wrap: wrap; margin: 28px 0 18px; }
+  .hero__numero { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-2); }
+  .hero__portada { display: block; justify-self: center; transform: rotate(2.5deg); transition: transform .5s cubic-bezier(.2,.7,.3,1); }
+  .hero__portada:hover { transform: rotate(0) translateY(-6px); }
+  .hero__portada img { max-height: 640px; width: auto; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,.1), 0 40px 70px -30px rgba(60,30,10,.55); }
+  .cifras { border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); }
+  .cifras__fila { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .cifras__fila > div { padding: 28px 12px; text-align: center; border-left: 1px solid var(--linea); }
+  .cifras__fila > div:first-child { border-left: 0; }
+  .cifras strong { display: block; font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); font-weight: 500; line-height: 1; color: var(--acento); }
+  .cifras span { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--tinta-2); }
+  .cabecera-seccion { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 44px; }
+  .cabecera-seccion h2 { margin-bottom: .3em; }
+  .rejilla-revistas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .mapa-home { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; align-items: center; }
+  .mapa-home .entradilla { margin-bottom: 1.6em; }
+  .unete { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+  .ventajas { list-style: none; padding: 0; margin: 0 0 32px; display: grid; gap: 18px; }
+  .ventajas li { border-top: 1px solid #3a352f; padding-top: 14px; color: #cfc6b8; }
+  .ventajas strong { display: block; font-family: var(--serif); font-weight: 500; font-size: 1.25rem; color: var(--papel); }
+  @media (max-width: 900px) {
+    .hero__rejilla, .mapa-home, .unete { grid-template-columns: 1fr; }
+    .hero__portada { order: -1; }
+    .hero__portada img { max-height: 420px; }
+    .rejilla-revistas { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .cifras__fila { grid-template-columns: repeat(2, 1fr); }
+    .cifras__fila > div:nth-child(3) { border-left: 0; }
+    .cifras__fila > div:nth-child(n+3) { border-top: 1px solid var(--linea); }
+  }
+</style>
