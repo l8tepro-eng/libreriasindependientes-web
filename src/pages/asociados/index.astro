@@ -1,0 +1,120 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mapa from '../../components/Mapa.astro';
+import { getLibrerias, url } from '../../lib/data.mjs';
+
+const librerias = await getLibrerias();
+const comunidades = [...new Set(librerias.map((l) => l.comunidad).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+---
+<Base titulo="Librerías asociadas" descripcion={`Encuentra tu librería independiente: ${librerias.length} librerías asociadas en toda España, con mapa, dirección y contacto.`}>
+  <section class="cabecera-pagina">
+    <div class="contenedor">
+      <span class="antetitulo">La red</span>
+      <h1>Librerías asociadas</h1>
+      <p class="entradilla">{librerias.length} librerías independientes de referencia. Busca por nombre, ciudad o comunidad.</p>
+      <div class="buscador">
+        <label class="buscador__campo">
+          <span class="visually-hidden">Buscar librería</span>
+          <input type="search" placeholder="Nombre, ciudad o código postal…" data-busqueda autocomplete="off" />
+        </label>
+        <label>
+          <span class="visually-hidden">Comunidad autónoma</span>
+          <select data-comunidad>
+            <option value="">Todas las comunidades</option>
+            {comunidades.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </label>
+        <span class="buscador__total" aria-live="polite"><span data-cuenta>{librerias.length}</span> librerías</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="contenedor directorio">
+    <div class="directorio__mapa"><Mapa librerias={librerias} /></div>
+    <ul class="directorio__lista">
+      {librerias.map((l) => (
+        <li class="lib" data-texto={norm(`${l.nombre} ${l.ciudad} ${l.provincia} ${l.cp} ${l.comunidad}`)} data-comunidad={l.comunidad} data-url={url(`/asociados/${l.slug}`)}>
+          <div class="lib__logo">
+            {l.logo ? <img src={l.logo} alt="" loading="lazy" decoding="async" /> : <span>{l.nombre.charAt(0)}</span>}
+          </div>
+          <div class="lib__datos">
+            <h3><a href={url(`/asociados/${l.slug}`)}>{l.nombre}</a></h3>
+            <p class="lib__lugar">{[l.ciudad, l.comunidad].filter(Boolean).join(' · ')}</p>
+            <p class="lib__dir">{l.direccion}{l.cp ? `, ${l.cp}` : ''}</p>
+            <div class="lib__acciones">
+              {l.telefono && <a href={`tel:${l.telefono.replace(/\s/g, '')}`}>{l.telefono}</a>}
+              {l.web && <a href={l.web} rel="noopener" target="_blank">Web ↗</a>}
+              {l.lat && <button type="button" data-enfocar>Ver en el mapa</button>}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <p class="directorio__vacio" hidden>No hay librerías que coincidan con la búsqueda.</p>
+  </div>
+</Base>
+
+<script>
+  const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const input = document.querySelector<HTMLInputElement>('[data-busqueda]')!;
+  const select = document.querySelector<HTMLSelectElement>('[data-comunidad]')!;
+  const items = [...document.querySelectorAll<HTMLElement>('.lib')];
+  const params = new URLSearchParams(location.search);
+  if (params.get('comunidad')) select.value = params.get('comunidad')!;
+
+  let t: number | undefined;
+  const aplicar = () => {
+    const q = norm(input.value);
+    const c = select.value;
+    const visibles = new Set<string>();
+    items.forEach((li) => {
+      const ok = (!q || li.dataset.texto!.includes(q)) && (!c || li.dataset.comunidad === c);
+      li.hidden = !ok;
+      if (ok) visibles.add(li.dataset.url!);
+    });
+    document.querySelector('[data-cuenta]')!.textContent = String(visibles.size);
+    document.querySelector<HTMLElement>('.directorio__vacio')!.hidden = visibles.size > 0;
+    window.dispatchEvent(new CustomEvent('filtro-librerias', { detail: { visibles } }));
+  };
+  input.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(aplicar, 150); });
+  select.addEventListener('change', aplicar);
+  document.querySelectorAll<HTMLButtonElement>('[data-enfocar]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const li = b.closest<HTMLElement>('.lib')!;
+      window.dispatchEvent(new CustomEvent('enfocar-libreria', { detail: li.dataset.url }));
+    }),
+  );
+  if (select.value) window.addEventListener('load', aplicar);
+</script>
+
+<style>
+  .cabecera-pagina { padding: clamp(48px, 7vw, 90px) 0 36px; }
+  .buscador { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 28px; }
+  .buscador input, .buscador select { font: inherit; font-size: 1rem; padding: .8em 1.1em; border: 1px solid var(--linea); border-radius: 999px; background: var(--blanco); color: var(--tinta); }
+  .buscador__campo { flex: 1 1 320px; }
+  .buscador__campo input { width: 100%; }
+  .buscador__total { font-size: .9rem; color: var(--tinta-2); }
+  .directorio { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: start; padding-bottom: 100px; }
+  .directorio__mapa { position: sticky; top: 96px; }
+  .directorio__lista { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--linea); }
+  .lib { display: grid; grid-template-columns: 64px 1fr; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--linea); }
+  .lib[hidden] { display: none; }
+  .lib__logo { width: 64px; height: 64px; border-radius: 8px; background: var(--blanco); border: 1px solid var(--linea); display: grid; place-items: center; overflow: hidden; }
+  .lib__logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+  .lib__logo span { font-family: var(--serif); font-size: 1.8rem; color: var(--acento); font-style: italic; }
+  .lib h3 { font-size: 1.2rem; margin: 0 0 2px; }
+  .lib h3 a { text-decoration: none; }
+  .lib h3 a:hover { color: var(--acento); }
+  .lib__lugar { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--acento); font-weight: 600; margin: 0 0 4px; }
+  .lib__dir { font-size: .92rem; color: var(--tinta-2); margin: 0 0 8px; }
+  .lib__acciones { display: flex; gap: 16px; flex-wrap: wrap; font-size: .88rem; }
+  .lib__acciones a, .lib__acciones button { color: var(--tinta); font: inherit; font-weight: 500; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--linea); text-underline-offset: 3px; }
+  .lib__acciones a:hover, .lib__acciones button:hover { text-decoration-color: var(--acento); }
+  .directorio__vacio { grid-column: 2; color: var(--tinta-2); }
+  @media (max-width: 900px) {
+    .directorio { grid-template-columns: 1fr; }
+    .directorio__mapa { position: static; }
+    .directorio__vacio { grid-column: 1; }
+  }
+</style>
