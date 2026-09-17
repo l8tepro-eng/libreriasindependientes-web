@@ -1,0 +1,194 @@
+---
+// Visor de revista: libro con paso de página en escritorio, scroll vertical en móvil.
+interface Props { pdf: string | null; titulo: string; portada?: string; descarga?: string }
+const { pdf, titulo, portada, descarga } = Astro.props;
+---
+<visor-revista data-pdf={pdf ?? ''} data-titulo={titulo} class="visor">
+  <div class="visor__escenario">
+    <div class="visor__cargando">
+      {portada && <img src={portada} alt="" class="visor__portada-previa" />}
+      <div class="visor__estado">
+        {pdf ? <><span class="visor__spinner" aria-hidden="true"></span><span data-estado>Preparando la revista…</span></> : <span>Vista previa no disponible para este número.</span>}
+      </div>
+    </div>
+    <div class="visor__libro" hidden></div>
+    <div class="visor__lista" hidden></div>
+  </div>
+  <div class="visor__controles" hidden>
+    <button type="button" class="visor__btn" data-accion="prev" aria-label="Página anterior">←</button>
+    <span class="visor__pagina" aria-live="polite"><span data-actual>1</span> / <span data-total>–</span></span>
+    <button type="button" class="visor__btn" data-accion="next" aria-label="Página siguiente">→</button>
+    <button type="button" class="visor__btn visor__btn--texto" data-accion="pantalla">Pantalla completa</button>
+    {descarga && <a class="visor__btn visor__btn--texto" href={descarga} download>Descargar PDF</a>}
+  </div>
+</visor-revista>
+
+<script>
+  import * as pdfjsLib from 'pdfjs-dist';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+  import { PageFlip } from 'page-flip';
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  class VisorRevista extends HTMLElement {
+    pdf: any;
+    renderizadas = new Set<number>();
+    ratio = 1.414;
+    escala = 1.6;
+
+    connectedCallback() {
+      const src = this.dataset.pdf;
+      if (!src) return;
+      const io = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          this.iniciar(src).catch((err) => this.error(err));
+        }
+      }, { rootMargin: '300px' });
+      io.observe(this);
+    }
+
+    estado(t: string) {
+      const el = this.querySelector('[data-estado]');
+      if (el) el.textContent = t;
+    }
+
+    error(err: unknown) {
+      console.error(err);
+      this.estado('No se ha podido cargar la revista. Puedes descargarla con el botón inferior.');
+      this.querySelector('.visor__spinner')?.remove();
+      const c = this.querySelector<HTMLElement>('.visor__controles');
+      if (c) { c.hidden = false; c.querySelectorAll('button').forEach((b) => (b.hidden = true)); }
+    }
+
+    async iniciar(src: string) {
+      this.pdf = await pdfjsLib.getDocument({ url: src }).promise;
+      const primera = await this.pdf.getPage(1);
+      const vp = primera.getViewport({ scale: 1 });
+      this.ratio = vp.height / vp.width;
+      const total = this.pdf.numPages;
+      this.querySelector('[data-total]')!.textContent = String(total);
+      const movil = window.matchMedia('(max-width: 760px)').matches;
+      movil ? this.modoLista(total) : this.modoLibro(total);
+      this.querySelector<HTMLElement>('.visor__cargando')!.hidden = true;
+      this.querySelector<HTMLElement>('.visor__controles')!.hidden = false;
+    }
+
+    crearPagina(n: number) {
+      const div = document.createElement('div');
+      div.className = 'visor__hoja';
+      div.dataset.n = String(n);
+      if (n === 1 || n === this.pdf.numPages) div.dataset.density = 'hard';
+      const canvas = document.createElement('canvas');
+      div.appendChild(canvas);
+      return div;
+    }
+
+    async renderizar(n: number, contenedor: ParentNode) {
+      if (n < 1 || n > this.pdf.numPages || this.renderizadas.has(n)) return;
+      this.renderizadas.add(n);
+      const div = contenedor.querySelector<HTMLElement>(`.visor__hoja[data-n="${n}"]`);
+      const canvas = div?.querySelector('canvas');
+      if (!canvas) return;
+      const page = await this.pdf.getPage(n);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const vp = page.getViewport({ scale: this.escala * dpr });
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext('2d')!, viewport: vp }).promise;
+      div!.classList.add('lista');
+    }
+
+    modoLibro(total: number) {
+      const libro = this.querySelector<HTMLElement>('.visor__libro')!;
+      libro.hidden = false;
+      const hojas = Array.from({ length: total }, (_, i) => this.crearPagina(i + 1));
+      hojas.forEach((h) => libro.appendChild(h));
+      const ancho = 520;
+      const flip = new PageFlip(libro, {
+        width: ancho,
+        height: Math.round(ancho * this.ratio),
+        size: 'stretch' as any,
+        minWidth: 280,
+        maxWidth: 900,
+        minHeight: 380,
+        maxHeight: 1300,
+        showCover: true,
+        maxShadowOpacity: 0.4,
+        mobileScrollSupport: false,
+        usePortrait: true,
+      } as any);
+      flip.loadFromHTML(hojas);
+      const pintar = (i: number) => {
+        for (let n = i - 1; n <= i + 4; n++) this.renderizar(n, libro);
+      };
+      pintar(1);
+      flip.on('flip', (e: any) => {
+        const idx = Number(e.data);
+        this.querySelector('[data-actual]')!.textContent = String(idx + 1);
+        pintar(idx + 1);
+      });
+      this.querySelector('[data-accion="prev"]')!.addEventListener('click', () => flip.flipPrev());
+      this.querySelector('[data-accion="next"]')!.addEventListener('click', () => flip.flipNext());
+      this.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') flip.flipPrev();
+        if (e.key === 'ArrowRight') flip.flipNext();
+      });
+      this.tabIndex = 0;
+      this.querySelector('[data-accion="pantalla"]')!.addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else this.requestFullscreen?.();
+      });
+    }
+
+    modoLista(total: number) {
+      const lista = this.querySelector<HTMLElement>('.visor__lista')!;
+      lista.hidden = false;
+      this.escala = 1.2;
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            const n = Number((e.target as HTMLElement).dataset.n);
+            this.renderizar(n, lista);
+            this.querySelector('[data-actual]')!.textContent = String(n);
+          }
+        }
+      }, { rootMargin: '600px 0px' });
+      for (let n = 1; n <= total; n++) {
+        const h = this.crearPagina(n);
+        h.style.aspectRatio = `1 / ${this.ratio}`;
+        lista.appendChild(h);
+        io.observe(h);
+      }
+      this.querySelectorAll<HTMLElement>('[data-accion="prev"],[data-accion="next"],[data-accion="pantalla"]').forEach((b) => (b.hidden = true));
+    }
+  }
+  customElements.define('visor-revista', VisorRevista);
+</script>
+
+<style is:global>
+  .visor { display: block; outline: none; }
+  .visor__escenario { position: relative; min-height: 420px; display: grid; place-items: center; }
+  .visor__cargando { display: grid; place-items: center; gap: 18px; padding: 20px; }
+  .visor__cargando[hidden] { display: none; }
+  .visor__portada-previa { max-height: 520px; width: auto; box-shadow: 0 20px 50px -20px rgba(0,0,0,.5); filter: saturate(.9); }
+  .visor__estado { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: inherit; opacity: .8; }
+  .visor__spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: visor-giro .8s linear infinite; }
+  @keyframes visor-giro { to { transform: rotate(360deg); } }
+  .visor__libro { width: 100%; max-width: 1100px; margin: 0 auto; }
+  .visor__hoja { background: #fff; overflow: hidden; }
+  .visor__hoja canvas { width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .3s; }
+  .visor__hoja.lista canvas { opacity: 1; }
+  .visor__lista { display: grid; gap: 14px; width: 100%; }
+  .visor__lista .visor__hoja { width: 100%; box-shadow: 0 6px 18px -10px rgba(0,0,0,.4); }
+  .visor__controles { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .visor__controles[hidden] { display: none; }
+  .visor__btn {
+    font: inherit; font-size: .9rem; min-width: 44px; height: 44px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid currentColor; background: transparent; color: inherit; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .visor__btn:hover { background: var(--acento); border-color: var(--acento); color: #fff; }
+  .visor__btn[hidden] { display: none; }
+  .visor__pagina { font-variant-numeric: tabular-nums; min-width: 80px; text-align: center; font-size: .92rem; }
+  .visor:fullscreen { background: var(--tinta); color: var(--papel); padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+</style>
