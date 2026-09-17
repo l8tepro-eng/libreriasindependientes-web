@@ -1,0 +1,25 @@
+{
+  "name": "libreriasindependientes-web",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "scrape": "node scripts/scrape.mjs",
+    "pdfs": "node scripts/fetch-pdfs.mjs",
+    "import:sanity": "node scripts/import-sanity.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/fraunces": "^5.1.0",
+    "@fontsource-variable/inter": "^5.1.0",
+    "@sanity/client": "^6.22.0",
+    "astro": "^5.1.0",
+    "cheerio": "^1.0.0",
+    "leaflet": "^1.9.4",
+    "page-flip": "^2.0.7",
+    "pdfjs-dist": "4.10.38"
+  },
+  "engines": { "node": ">=20" }
+}

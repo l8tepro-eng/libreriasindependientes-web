@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.env
+public/pdf/
+src/data/pdf-manifest.json
+studio/node_modules/
+studio/dist/
+ci.log
