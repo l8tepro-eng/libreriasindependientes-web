@@ -147,7 +147,7 @@ async function scrapeLibrerias() {
       if ((m = l.match(/^(\d{5})\s*-\s*(.+)$/))) { d.cp = m[1]; d.ciudad = titleCase(m[2].trim()); }
       else if (/@/.test(l) && !d.email) d.email = (l.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/) || [l])[0];
       else if (/^(h[tp]{2,3}s?:\/\/|www\.)/i.test(l) && !d.web) d.web = l.replace(/^htpps?:/i, 'https:').replace(/^www\./i, 'https://www.');
-      else if (/^[\d\s.+-()/-]{9,}$/.test(l) && !d.telefono) d.telefono = l.trim();
+      else if (/^[\d\s.()+-]{9,}$/.test(l) && !d.telefono) d.telefono = l.trim();
       else if (!d.direccion && !d.cp) d.direccion = l;
     }
     libs.set(slug, d);
