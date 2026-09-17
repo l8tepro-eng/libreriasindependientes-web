@@ -1,0 +1,58 @@
+---
+import Base from '../../layouts/Base.astro';
+import Visor from '../../components/Visor.astro';
+import RevistaCard from '../../components/RevistaCard.astro';
+import { getRevistas, url, nombreTemporada } from '../../lib/data.mjs';
+
+export async function getStaticPaths() {
+  const revistas = await getRevistas();
+  return revistas.map((r) => ({ params: { slug: r.slug }, props: { revista: r } }));
+}
+const { revista: r } = Astro.props;
+const todas = await getRevistas();
+const i = todas.findIndex((x) => x.slug === r.slug);
+const otraLengua = todas.find((x) => x.numero && x.numero === r.numero && x.idioma !== r.idioma);
+const relacionadas = todas.filter((x) => x.slug !== r.slug && x.idioma === r.idioma).slice(0, 4);
+---
+<Base titulo={`${r.titulo}${r.subtitulo ? ' · ' + r.subtitulo : ''}`} descripcion={r.descripcion || `Lee en línea la Revista L ${nombreTemporada(r)} ${r.anio ?? ''} de Librerías Independientes.`} imagen={r.portada}>
+  <section class="seccion seccion--oscura ficha-revista">
+    <div class="contenedor">
+      <a class="volver" href={url('/revista-l')}>← Archivo de la Revista L</a>
+      <div class="ficha-revista__cab">
+        <div>
+          <span class="antetitulo">{nombreTemporada(r)} {r.anio}{r.idioma === 'ca' ? ' · Català' : ''}</span>
+          <h1>{r.titulo}</h1>
+          {r.subtitulo && <p class="entradilla">{r.subtitulo}</p>}
+          {r.descripcion && <p class="ficha-revista__desc">{r.descripcion}</p>}
+        </div>
+        <div class="ficha-revista__acciones">
+          {otraLengua && <a class="boton" href={url(`/revista-l/${otraLengua.slug}`)}>{otraLengua.idioma === 'ca' ? 'Versió en català' : 'Versión en castellano'}</a>}
+        </div>
+      </div>
+      <Visor pdf={r.pdfVisor} titulo={r.titulo} portada={r.portada} descarga={r.pdf} />
+    </div>
+  </section>
+
+  {relacionadas.length > 0 && (
+    <section class="seccion">
+      <div class="contenedor">
+        <span class="antetitulo">Sigue leyendo</span>
+        <h2>Otros números</h2>
+        <div class="rel">
+          {relacionadas.map((x) => <RevistaCard revista={x} />)}
+        </div>
+      </div>
+    </section>
+  )}
+</Base>
+<style>
+  .ficha-revista { padding-top: 40px; }
+  .volver { color: #cfc6b8; text-decoration: none; font-size: .9rem; }
+  .volver:hover { color: var(--ocre); }
+  .ficha-revista__cab { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin: 28px 0 40px; }
+  .ficha-revista h1 { font-size: clamp(2.2rem, 4.5vw, 3.6rem); }
+  .ficha-revista .entradilla { color: #cfc6b8; }
+  .ficha-revista__desc { max-width: 60ch; color: #cfc6b8; }
+  .rel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 32px; }
+  @media (max-width: 800px) { .rel { grid-template-columns: repeat(2, 1fr); } }
+</style>
