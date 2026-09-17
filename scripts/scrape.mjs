@@ -129,7 +129,8 @@ async function scrapeLibrerias() {
     const href = abs($(el).attr('href'));
     const slug = href.replace(/\/$/, '').split('/asociados/')[1];
     if (!slug || slug.includes('/') || libs.has(slug)) return;
-    const nombre = $(el).text().replace(/\s+/g, ' ').trim();
+    const lineasEnlace = lineas($, el);
+    const nombre = (lineasEnlace[0] || $(el).text()).replace(/\s+/g, ' ').trim();
     if (!nombre) return;
     // bloque de la librería: ancestro con un único enlace a ficha
     let cont = $(el);
