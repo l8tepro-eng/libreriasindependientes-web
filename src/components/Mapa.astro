@@ -1,0 +1,70 @@
+---
+import { url } from '../lib/data.mjs';
+interface Props { librerias: any[]; compacto?: boolean }
+const { librerias, compacto = false } = Astro.props;
+const puntos = librerias
+  .filter((l) => l.lat && l.lng)
+  .map((l) => ({ n: l.nombre, c: l.ciudad || '', co: l.comunidad || '', lat: l.lat, lng: l.lng, u: url(`/asociados/${l.slug}`) }));
+---
+<div class:list={['mapa', { 'mapa--compacto': compacto }]} data-puntos={JSON.stringify(puntos)}>
+  <div class="mapa__lienzo" role="region" aria-label="Mapa de librerías asociadas"></div>
+</div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+
+  document.querySelectorAll<HTMLElement>('.mapa').forEach((caja) => {
+    const puntos = JSON.parse(caja.dataset.puntos || '[]');
+    const lienzo = caja.querySelector<HTMLElement>('.mapa__lienzo')!;
+    const compacto = caja.classList.contains('mapa--compacto');
+    const map = L.map(lienzo, { scrollWheelZoom: false, zoomControl: !compacto, attributionControl: true }).setView([40.2, -3.7], 6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const capa = L.featureGroup().addTo(map);
+    const marcadores = puntos.map((p: any) => {
+      const m = L.circleMarker([p.lat, p.lng], {
+        radius: 7, color: '#fffdf8', weight: 2, fillColor: '#a3321f', fillOpacity: 0.95,
+      }).bindPopup(`<strong>${p.n}</strong><br>${p.c}<br><a href="${p.u}">Ver librería →</a>`);
+      (m as any).datos = p;
+      m.addTo(capa);
+      return m;
+    });
+
+    const encuadrar = () => {
+      const visibles = marcadores.filter((m: any) => capa.hasLayer(m));
+      if (visibles.length) map.fitBounds(L.featureGroup(visibles).getBounds(), { padding: [30, 30], maxZoom: 13 });
+    };
+    // Canarias queda lejos: encuadre peninsular por defecto en el modo compacto
+    if (compacto) map.fitBounds([[36.0, -9.4], [43.8, 3.4]]);
+    else encuadrar();
+
+    // Filtro compartido con el listado (evento personalizado)
+    window.addEventListener('filtro-librerias', (e: any) => {
+      const { visibles } = e.detail as { visibles: Set<string> };
+      marcadores.forEach((m: any) => {
+        const ok = visibles.has(m.datos.u);
+        if (ok && !capa.hasLayer(m)) capa.addLayer(m);
+        if (!ok && capa.hasLayer(m)) capa.removeLayer(m);
+      });
+      encuadrar();
+    });
+    window.addEventListener('enfocar-libreria', (e: any) => {
+      const m = marcadores.find((x: any) => x.datos.u === e.detail);
+      if (m) { map.setView(m.getLatLng(), 14); m.openPopup(); lienzo.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    });
+  });
+</script>
+
+<style is:global>
+  .mapa__lienzo { height: 560px; border-radius: 6px; overflow: hidden; background: #e9e4da; z-index: 0; }
+  .mapa--compacto .mapa__lienzo { height: 460px; }
+  .mapa .leaflet-popup-content { font-family: var(--sans); font-size: .9rem; line-height: 1.4; }
+  .mapa .leaflet-popup-content strong { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; }
+  .mapa .leaflet-popup-content a { color: var(--acento); font-weight: 600; }
+  @media (max-width: 700px) { .mapa__lienzo { height: 420px; } }
+</style>
