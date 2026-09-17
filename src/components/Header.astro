@@ -1,0 +1,51 @@
+---
+import Logo from './Logo.astro';
+import { url } from '../lib/data.mjs';
+const enlaces = [
+  { href: '/revista-l', texto: 'Revista L' },
+  { href: '/asociados', texto: 'Librerías' },
+  { href: '/quienes-somos', texto: 'Quiénes somos' },
+  { href: '/contacto', texto: 'Contacto' },
+];
+const actual = Astro.url.pathname;
+---
+<header class="cabecera">
+  <div class="contenedor cabecera__fila">
+    <a href={url('/')} class="cabecera__logo" aria-label="Librerías Independientes, inicio"><Logo /></a>
+    <nav aria-label="Principal" class="cabecera__nav">
+      <details class="menu-movil">
+        <summary aria-label="Abrir menú"><span></span><span></span><span></span></summary>
+        <ul>
+          {enlaces.map((e) => <li><a href={url(e.href)}>{e.texto}</a></li>)}
+          <li><a href={url('/asociacion-libreros')}>Únete a la red</a></li>
+        </ul>
+      </details>
+      <ul class="menu">
+        {enlaces.map((e) => (
+          <li><a href={url(e.href)} aria-current={actual.startsWith(url(e.href)) ? 'page' : undefined}>{e.texto}</a></li>
+        ))}
+      </ul>
+      <a class="boton cabecera__cta" href={url('/asociacion-libreros')}>Únete a la red</a>
+    </nav>
+  </div>
+</header>
+<style>
+  .cabecera { position: sticky; top: 0; z-index: 1000; background: color-mix(in srgb, var(--papel) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--linea); }
+  .cabecera__fila { display: flex; align-items: center; justify-content: space-between; min-height: 76px; gap: 24px; }
+  .cabecera__logo { text-decoration: none; }
+  .cabecera__nav { display: flex; align-items: center; gap: 28px; }
+  .menu { list-style: none; display: flex; gap: 26px; margin: 0; padding: 0; }
+  .menu a { text-decoration: none; font-size: .95rem; font-weight: 500; padding: 6px 0; border-bottom: 1.5px solid transparent; transition: border-color .2s; }
+  .menu a:hover, .menu a[aria-current] { border-color: var(--acento); }
+  .cabecera__cta { padding: .6em 1.1em; font-size: .88rem; }
+  .menu-movil { display: none; position: relative; }
+  .menu-movil summary { list-style: none; cursor: pointer; width: 40px; height: 40px; display: grid; align-content: center; gap: 5px; padding: 8px; }
+  .menu-movil summary::-webkit-details-marker { display: none; }
+  .menu-movil summary span { display: block; height: 2px; background: var(--tinta); border-radius: 2px; }
+  .menu-movil ul { position: absolute; right: 0; top: 48px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 8px; list-style: none; margin: 0; padding: 10px; min-width: 220px; box-shadow: 0 12px 30px rgba(0,0,0,.08); }
+  .menu-movil a { display: block; padding: 10px 12px; text-decoration: none; font-weight: 500; }
+  @media (max-width: 900px) {
+    .menu, .cabecera__cta { display: none; }
+    .menu-movil { display: block; }
+  }
+</style>

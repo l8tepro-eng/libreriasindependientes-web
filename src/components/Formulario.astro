@@ -1,0 +1,51 @@
+---
+interface Props { tipo: 'union' | 'contacto' }
+const { tipo } = Astro.props;
+---
+<form class="form" data-demo>
+  <div class="form__fila">
+    <label>Nombre y apellidos<input name="nombre" required autocomplete="name" /></label>
+    <label>Email<input name="email" type="email" required autocomplete="email" /></label>
+  </div>
+  {tipo === 'union' ? (
+    <div class="form__fila">
+      <label>Nombre de la librería<input name="libreria" required /></label>
+      <label>Ciudad<input name="ciudad" required /></label>
+    </div>
+  ) : (
+    <div class="form__fila">
+      <label>Teléfono<input name="telefono" type="tel" autocomplete="tel" /></label>
+      <label>Soy…
+        <select name="perfil">
+          <option>Lector/a</option>
+          <option>Librero/a</option>
+          <option>Editorial / distribuidora</option>
+          <option>Otro</option>
+        </select>
+      </label>
+    </div>
+  )}
+  <label>{tipo === 'union' ? 'Cuéntanos sobre tu librería' : 'Mensaje'}<textarea name="mensaje" rows="5" required></textarea></label>
+  <label class="form__check"><input type="checkbox" required /> He leído y acepto la política de privacidad.</label>
+  <button class="boton" type="submit">{tipo === 'union' ? 'Enviar solicitud' : 'Enviar mensaje'} <span class="flecha">→</span></button>
+  <p class="form__ok" hidden role="status">Gracias. <em>(Demo: en la versión final este formulario enviará el mensaje a Librerías Independientes.)</em></p>
+</form>
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-demo]').forEach((f) =>
+    f.addEventListener('submit', (e) => {
+      e.preventDefault();
+      f.querySelector<HTMLElement>('.form__ok')!.hidden = false;
+      f.reset();
+    }),
+  );
+</script>
+<style>
+  .form { display: grid; gap: 18px; }
+  .form__fila { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form label { display: grid; gap: 6px; font-size: .8rem; font-weight: 600; letter-spacing: .04em; }
+  .form input, .form select, .form textarea { font: inherit; font-size: 1rem; font-weight: 400; padding: .8em 1em; border: 1px solid var(--linea); border-radius: 6px; background: var(--blanco); color: var(--tinta); }
+  .form__check { display: flex !important; align-items: center; gap: 10px !important; font-weight: 400 !important; }
+  .form button { justify-self: start; }
+  .form__ok { background: var(--papel-2); padding: 14px 18px; border-left: 3px solid var(--acento); }
+  @media (max-width: 600px) { .form__fila { grid-template-columns: 1fr; } }
+</style>

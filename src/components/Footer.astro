@@ -1,0 +1,53 @@
+---
+import Logo from './Logo.astro';
+import { url } from '../lib/data.mjs';
+const anio = new Date().getFullYear();
+---
+<footer class="pie">
+  <div class="contenedor pie__rejilla">
+    <div>
+      <Logo claro />
+      <p class="pie__lema">Desde 1997, la red que une a las librerías independientes de referencia de España.</p>
+    </div>
+    <div>
+      <h4>Explora</h4>
+      <ul>
+        <li><a href={url('/revista-l')}>Revista L</a></li>
+        <li><a href={url('/asociados')}>Librerías asociadas</a></li>
+        <li><a href={url('/asociacion-libreros')}>Únete a la red</a></li>
+        <li><a href={url('/quienes-somos')}>Quiénes somos</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contacto</h4>
+      <address>C/ Villanueva 33, 3º Izqda.<br />28001 Madrid</address>
+      <p><a href={url('/contacto')}>Escríbenos</a></p>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="https://www.anuncioslegales.es/libreriasindependientes" rel="noopener">Sede electrónica</a></li>
+        <li><a href="https://www.libreriasindependientes.com/aviso-legal">Aviso legal</a></li>
+        <li><a href="https://www.libreriasindependientes.com/politica-privacidad">Privacidad</a></li>
+        <li><a href="https://www.libreriasindependientes.com/cookies">Cookies</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="contenedor pie__base">
+    <span>© {anio} L-Librerías Independientes, S.A.</span>
+    <span>Diseño y desarrollo: Leran AI</span>
+  </div>
+</footer>
+<style>
+  .pie { background: var(--tinta); color: #cfc6b8; padding: 72px 0 28px; font-size: .92rem; }
+  .pie__rejilla { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; }
+  .pie h4 { font-family: var(--sans); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ocre); font-weight: 600; margin-bottom: 1rem; }
+  .pie ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; }
+  .pie a { text-decoration: none; color: var(--papel); }
+  .pie a:hover { color: var(--ocre); }
+  .pie address { font-style: normal; margin-bottom: .6rem; }
+  .pie__lema { margin-top: 1.2rem; max-width: 32ch; }
+  .pie__base { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid #3a352f; margin-top: 56px; padding-top: 20px; font-size: .8rem; }
+  @media (max-width: 800px) { .pie__rejilla { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .pie__rejilla { grid-template-columns: 1fr; } }
+</style>
