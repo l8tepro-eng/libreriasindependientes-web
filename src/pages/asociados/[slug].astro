@@ -1,0 +1,92 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mapa from '../../components/Mapa.astro';
+import { getLibrerias, url } from '../../lib/data.mjs';
+
+export async function getStaticPaths() {
+  const librerias = await getLibrerias();
+  return librerias.map((l) => ({ params: { slug: l.slug }, props: { l } }));
+}
+const { l } = Astro.props;
+const todas = await getLibrerias();
+const cercanas = todas.filter((x) => x.slug !== l.slug && x.comunidad && x.comunidad === l.comunidad).slice(0, 6);
+const parrafos = (l.descripcion || '').split(/\n+/).filter(Boolean);
+const mapsUrl = l.lat ? `https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.nombre} ${l.direccion} ${l.ciudad}`)}`;
+---
+<Base titulo={`${l.nombre}${l.ciudad ? ', ' + l.ciudad : ''}`} descripcion={`${l.nombre}, librería independiente en ${l.ciudad ?? 'España'}. Dirección, teléfono y contacto.`} imagen={l.fotos?.[0] || l.logo}>
+  <section class="ficha">
+    <div class="contenedor">
+      <a class="volver" href={url('/asociados')}>← Todas las librerías</a>
+      <div class="ficha__cab">
+        {l.logo && <img class="ficha__logo" src={l.logo} alt={`Logo de ${l.nombre}`} />}
+        <div>
+          <span class="antetitulo">{[l.ciudad, l.provincia !== l.ciudad ? l.provincia : null, l.comunidad].filter(Boolean).join(' · ')}</span>
+          <h1>{l.nombre}</h1>
+        </div>
+      </div>
+
+      <div class="ficha__rejilla">
+        <div class="ficha__texto">
+          {parrafos.length ? parrafos.map((p) => <p>{p}</p>) : <p class="entradilla">Librería independiente asociada a la red de Librerías Independientes.</p>}
+          {l.fotos?.length > 0 && (
+            <div class="galeria">
+              {l.fotos.slice(0, 6).map((f) => <img src={f} alt={`Interior de ${l.nombre}`} loading="lazy" decoding="async" />)}
+            </div>
+          )}
+        </div>
+        <aside class="ficha__datos">
+          <dl>
+            {l.direccion && <><dt>Dirección</dt><dd>{l.direccion}<br />{l.cp} {l.ciudad}</dd></>}
+            {l.telefono && <><dt>Teléfono</dt><dd><a href={`tel:${l.telefono.replace(/\s/g, '')}`}>{l.telefono}</a></dd></>}
+            {l.email && <><dt>Email</dt><dd><a href={`mailto:${l.email}`}>{l.email}</a></dd></>}
+            {l.web && <><dt>Web</dt><dd><a href={l.web} rel="noopener" target="_blank">{l.web.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></dd></>}
+          </dl>
+          <a class="boton" href={mapsUrl} target="_blank" rel="noopener">Cómo llegar ↗</a>
+          {l.lat && <div class="ficha__mapa"><Mapa librerias={[l]} /></div>}
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {cercanas.length > 0 && (
+    <section class="seccion seccion--crema">
+      <div class="contenedor">
+        <span class="antetitulo">Cerca</span>
+        <h2>Más librerías en {l.comunidad}</h2>
+        <ul class="cercanas">
+          {cercanas.map((x) => (
+            <li><a href={url(`/asociados/${x.slug}`)}><strong>{x.nombre}</strong><span>{x.ciudad}</span></a></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+</Base>
+<style>
+  .ficha { padding: 40px 0 90px; }
+  .volver { color: var(--tinta-2); text-decoration: none; font-size: .9rem; }
+  .volver:hover { color: var(--acento); }
+  .ficha__cab { display: flex; gap: 28px; align-items: center; margin: 32px 0 48px; }
+  .ficha__logo { width: 120px; height: 120px; object-fit: contain; background: var(--blanco); border: 1px solid var(--linea); border-radius: 12px; padding: 10px; }
+  .ficha__rejilla { display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; align-items: start; }
+  .ficha__texto p { font-size: 1.08rem; max-width: 62ch; }
+  .galeria { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 32px; }
+  .galeria img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; border-radius: 4px; }
+  .ficha__datos { background: var(--blanco); border: 1px solid var(--linea); border-radius: 8px; padding: 28px; position: sticky; top: 96px; }
+  .ficha__datos dl { margin: 0 0 24px; }
+  .ficha__datos dt { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--acento); font-weight: 600; margin-top: 14px; }
+  .ficha__datos dd { margin: 2px 0 0; word-break: break-word; }
+  .ficha__mapa { margin-top: 24px; }
+  .ficha__mapa :global(.mapa__lienzo) { height: 240px; }
+  .cercanas { list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--linea); border: 1px solid var(--linea); }
+  .cercanas a { display: block; background: var(--papel-2); padding: 20px; text-decoration: none; height: 100%; }
+  .cercanas a:hover { background: var(--blanco); }
+  .cercanas strong { display: block; font-family: var(--serif); font-weight: 500; font-size: 1.15rem; }
+  .cercanas span { font-size: .85rem; color: var(--tinta-2); }
+  @media (max-width: 900px) {
+    .ficha__rejilla { grid-template-columns: 1fr; }
+    .ficha__datos { position: static; }
+    .cercanas { grid-template-columns: 1fr 1fr; }
+    .ficha__cab { flex-direction: column; align-items: start; }
+  }
+</style>
