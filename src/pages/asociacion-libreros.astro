@@ -1,0 +1,90 @@
+---
+import Base from '../layouts/Base.astro';
+import Formulario from '../components/Formulario.astro';
+import Mapa from '../components/Mapa.astro';
+import { getLibrerias } from '../lib/data.mjs';
+const librerias = await getLibrerias();
+const ciudades = new Set(librerias.map((l) => (l.ciudad || '').toLowerCase()).filter(Boolean)).size;
+const ventajas = [
+  ['Compras centralizadas', 'Negociación comercial conjunta y adquisición centralizada de novedades y promociones.'],
+  ['Pagos a proveedores', 'La central gestiona los pagos a editoriales y distribuidores, y simplifica tu administración.'],
+  ['Revista L', 'Cuatro catálogos al año con novedades y recomendaciones, para repartir entre tus clientes.'],
+  ['Campañas y promociones', 'Lanzamientos, Promociones L y campañas conjuntas en todo el país.'],
+  ['Interlocución con el sector', 'Una sola voz ante editores y distribuidores, con el peso de más de cien librerías.'],
+  ['Comunidad de libreros', 'Libreros profesionales compartiendo experiencia, actividades y buenas prácticas.'],
+];
+---
+<Base titulo="Únete a la red" descripcion="Suma tu librería a Librerías Independientes: compras centralizadas, Revista L, campañas y una comunidad de más de cien libreros.">
+  <section class="hero-union">
+    <div class="contenedor hero-union__rejilla">
+      <div>
+        <span class="antetitulo">Para libreros</span>
+        <h1>Tu librería, <em>con la fuerza</em> de {librerias.length} más</h1>
+        <p class="entradilla">Librerías Independientes existe para apoyar, asesorar y trabajar con sus miembros. Rendimiento, presencia, planes de ahorro, campañas, eventos y promociones.</p>
+        <a class="boton" href="#solicitud">Solicitar información <span class="flecha">→</span></a>
+      </div>
+      <div class="hero-union__cifras">
+        <div><strong>{librerias.length}</strong><span>librerías</span></div>
+        <div><strong>{ciudades}</strong><span>ciudades</span></div>
+        <div><strong>1997</strong><span>desde</span></div>
+        <div><strong>4</strong><span>revistas al año</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion seccion--crema">
+    <div class="contenedor">
+      <span class="antetitulo">Qué ganas</span>
+      <h2>Por qué pertenecer a Librerías Independientes</h2>
+      <ol class="ventajas-grid">
+        {ventajas.map(([t, d]) => <li><h3>{t}</h3><p>{d}</p></li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor valores">
+      <blockquote>
+        «Somos una gran comunidad. Somos independientes: cada librería tiene sus particularidades. Somos locales. Somos libreros, gente que ama el libro.»
+      </blockquote>
+      <Mapa librerias={librerias} compacto />
+    </div>
+  </section>
+
+  <section class="seccion seccion--oscura" id="solicitud">
+    <div class="contenedor solicitud">
+      <div>
+        <span class="antetitulo">Hablemos</span>
+        <h2>Solicita información para asociarte</h2>
+        <p>Te contactaremos para explicarte las condiciones y resolver tus dudas.</p>
+        <p>Librerías Independientes<br />C/ Villanueva 33, 3º Izqda.<br />28001 Madrid</p>
+      </div>
+      <div class="solicitud__form"><Formulario tipo="union" /></div>
+    </div>
+  </section>
+</Base>
+<style>
+  .hero-union { padding: clamp(48px, 8vw, 110px) 0; }
+  .hero-union__rejilla { display: grid; grid-template-columns: 1.3fr .7fr; gap: 60px; align-items: center; }
+  .hero-union h1 em { color: var(--acento); font-weight: 400; }
+  .hero-union .entradilla { margin-bottom: 1.6em; }
+  .hero-union__cifras { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--linea); }
+  .hero-union__cifras div { padding: 26px 20px; border: 1px solid var(--linea); margin: -1px 0 0 -1px; }
+  .hero-union__cifras strong { display: block; font-family: var(--serif); font-size: 2.6rem; font-weight: 500; line-height: 1; color: var(--acento); }
+  .hero-union__cifras span { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--tinta-2); }
+  .ventajas-grid { list-style: none; counter-reset: v; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px 36px; }
+  .ventajas-grid li { counter-increment: v; border-top: 2px solid var(--tinta); padding-top: 18px; }
+  .ventajas-grid li::before { content: '0' counter(v); font-family: var(--serif); color: var(--acento); font-size: .95rem; }
+  .ventajas-grid h3 { margin: 8px 0 6px; }
+  .ventajas-grid p { color: var(--tinta-2); margin: 0; }
+  .valores { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; align-items: center; }
+  blockquote { margin: 0; font-family: var(--serif); font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height: 1.25; font-style: italic; }
+  .solicitud { display: grid; grid-template-columns: .8fr 1.2fr; gap: 56px; }
+  .solicitud p { color: #cfc6b8; }
+  .solicitud__form { background: var(--papel); color: var(--tinta); padding: 32px; border-radius: 8px; }
+  @media (max-width: 900px) {
+    .hero-union__rejilla, .valores, .solicitud { grid-template-columns: 1fr; }
+    .ventajas-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) { .ventajas-grid { grid-template-columns: 1fr; } }
+</style>
