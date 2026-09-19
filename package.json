@@ -12,8 +12,6 @@
     "import:sanity": "node scripts/import-sanity.mjs"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.1.0",
-    "@fontsource-variable/inter": "^5.1.0",
     "@sanity/client": "^6.22.0",
     "astro": "^5.1.0",
     "cheerio": "^1.0.0",

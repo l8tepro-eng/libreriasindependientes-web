@@ -3,7 +3,9 @@ dist/
 .astro/
 .env
 public/pdf/
+public/portadas/
 src/data/pdf-manifest.json
+src/data/portadas-manifest.json
 studio/node_modules/
 studio/dist/
 ci.log
