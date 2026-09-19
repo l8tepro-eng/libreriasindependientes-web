@@ -69,7 +69,7 @@ const { pdf, titulo, portada, descarga } = Astro.props;
       const total = this.pdf.numPages;
       this.querySelector('[data-total]')!.textContent = String(total);
       const movil = window.matchMedia('(max-width: 760px)').matches;
-      movil ? this.modoLista(total) : this.modoLibro(total);
+      movil ? this.modoPase(total) : this.modoLibro(total);
       this.querySelector<HTMLElement>('.visor__cargando')!.hidden = true;
       this.querySelector<HTMLElement>('.visor__controles')!.hidden = false;
     }
@@ -141,26 +141,42 @@ const { pdf, titulo, portada, descarga } = Astro.props;
       });
     }
 
-    modoLista(total: number) {
-      const lista = this.querySelector<HTMLElement>('.visor__lista')!;
-      lista.hidden = false;
-      this.escala = 1.2;
-      const io = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            const n = Number((e.target as HTMLElement).dataset.n);
-            this.renderizar(n, lista);
-            this.querySelector('[data-actual]')!.textContent = String(n);
-          }
-        }
-      }, { rootMargin: '600px 0px' });
+    modoPase(total: number) {
+      const pase = this.querySelector<HTMLElement>('.visor__lista')!;
+      pase.hidden = false;
+      pase.classList.add('visor__pase');
+      this.escala = 1.4;
+      const hojas: HTMLElement[] = [];
       for (let n = 1; n <= total; n++) {
         const h = this.crearPagina(n);
         h.style.aspectRatio = `1 / ${this.ratio}`;
-        lista.appendChild(h);
-        io.observe(h);
+        pase.appendChild(h);
+        hojas.push(h);
       }
-      this.querySelectorAll<HTMLElement>('[data-accion="prev"],[data-accion="next"],[data-accion="pantalla"]').forEach((b) => (b.hidden = true));
+      const actual = () => {
+        const centro = pase.scrollLeft + pase.clientWidth / 2;
+        return Math.min(total, Math.max(1, Math.round(centro / pase.clientWidth + 0.5)));
+      };
+      const pintar = (n: number) => {
+        for (let k = n - 1; k <= n + 2; k++) this.renderizar(k, pase);
+      };
+      pintar(1);
+      let t: number | undefined;
+      pase.addEventListener('scroll', () => {
+        clearTimeout(t);
+        t = window.setTimeout(() => {
+          const n = actual();
+          this.querySelector('[data-actual]')!.textContent = String(n);
+          pintar(n);
+        }, 120);
+      }, { passive: true });
+      const ir = (delta: number) => {
+        const destino = Math.min(total, Math.max(1, actual() + delta));
+        pase.scrollTo({ left: (destino - 1) * pase.clientWidth, behavior: 'smooth' });
+      };
+      this.querySelector('[data-accion="prev"]')!.addEventListener('click', () => ir(-1));
+      this.querySelector('[data-accion="next"]')!.addEventListener('click', () => ir(1));
+      this.querySelector<HTMLElement>('[data-accion="pantalla"]')!.hidden = true;
     }
   }
   customElements.define('visor-revista', VisorRevista);
@@ -181,6 +197,12 @@ const { pdf, titulo, portada, descarga } = Astro.props;
   .visor__hoja.lista canvas { opacity: 1; }
   .visor__lista { display: grid; gap: 14px; width: 100%; }
   .visor__lista .visor__hoja { width: 100%; box-shadow: 0 6px 18px -10px rgba(0,0,0,.4); }
+  .visor__pase {
+    display: flex; gap: 0; width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .visor__pase::-webkit-scrollbar { display: none; }
+  .visor__pase .visor__hoja { flex: 0 0 100%; scroll-snap-align: center; box-shadow: 0 6px 18px -10px rgba(0,0,0,.4); }
   .visor__controles { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
   .visor__controles[hidden] { display: none; }
   .visor__btn {
