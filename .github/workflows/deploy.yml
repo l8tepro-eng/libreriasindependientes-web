@@ -59,6 +59,12 @@ jobs:
       - name: Descargar PDFs para el visor
         run: node scripts/fetch-pdfs.mjs 2>&1 | tee -a ci.log
 
+      - name: Generar portadas desde los PDFs
+        run: |
+          sudo apt-get update -qq 2>&1 | tail -1
+          sudo apt-get install -y -qq poppler-utils 2>&1 | tail -1
+          node scripts/portadas.mjs 2>&1 | tee -a ci.log
+
       - name: Compilar
         run: npm run build 2>&1 | tee -a ci.log
 
