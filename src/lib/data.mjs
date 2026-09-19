@@ -63,8 +63,11 @@ export async function getRevistas() {
     list = await readJson('revistas.json', []);
   }
   const manifest = await readJson('pdf-manifest.json', {});
+  const portadas = await readJson('portadas-manifest.json', {});
   cache.revistas = sortRevistas(list).map((r) => ({
     ...r,
+    // portada generada del PDF (más nítida que la miniatura de la web antigua)
+    portada: portadas[r.slug] || r.portada,
     // URL legible por el visor (mismo origen o CDN con CORS)
     pdfVisor: manifest[r.slug] || (r.pdf && r.pdf.includes('cdn.sanity.io') ? r.pdf : null),
   }));
