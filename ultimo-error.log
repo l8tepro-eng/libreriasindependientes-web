@@ -1,0 +1,86 @@
+npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+npm warn deprecated tsconfck@3.1.6: unmaintained
+
+added 317 packages in 16s
+ok 2026-3-82-revista-librerias-otono-web (5.9 MB)
+ok 2026-3-82-revista-librerias-otono-web-catalan (1.2 MB)
+ok 2026-2-81-revista-librerias-verano (4.8 MB)
+ok 2026-2-81-revista-librerias-verano-catalan (0.6 MB)
+ok 2026-1-80-revista-librerias-primavera (17.7 MB)
+ok 2026-1-80-revista-librerias-primavera-catalan (2.1 MB)
+ok 2025-4-79-revista-librerias-invierno (7.9 MB)
+ok 2025-4-79-revista-librerias-invierno-catalan (0.8 MB)
+ok 2025-3-78-revista-librerias-otono-web (4.8 MB)
+ok 2025-3-78-revista-librerias-otono-catalan-web (0.5 MB)
+ok 2025-2-77-revista-librerias-verano-web (4.3 MB)
+ok 2025-2-77-revista-librerias-verano-catalan-web (0.5 MB)
+ok 2025-1-76-revista-librerias-primavera (5.4 MB)
+ok 2025-1-76-revista-librerias-primavera-catalan (0.8 MB)
+ok 2024-4-75-revista-librerias-invierno (5.6 MB)
+ok 2024-4-75-revista-librerias-invierno-catalan-web (0.8 MB)
+ok 2024-2-74-revista-librerias-otono-web (10.8 MB)
+ok 2024-2-74-revista-librerias-otono-catalan-web (0.7 MB)
+ok 2024-2-73-revista-librerias-verano-web (5.6 MB)
+ok 2024-2-73-revista-librerias-verano-catalan-web (0.5 MB)
+ok 2024-1-72-revista-librerias-primavera-web (7.2 MB)
+ok 2024-1-72-revista-librerias-primavera-catalan-web (1.7 MB)
+ok 2023-4-71-revista-librerias-invierno-web (16.9 MB)
+ok 2023-4-71-catalan-revista-librerias-invierno-web (0.6 MB)
+ok 2023-03-70-pdf-revista-otono-2023 (8.2 MB)
+ok 2023-03-70-pdf-revista-otono-2023-catalan (1.0 MB)
+ok 2023-2-69-revista-librerias-verano-v3 (39.5 MB)
+ok 2023-01-68-pdf-revista-abril (4.1 MB)
+ok 2023-01-68-pdf-revista-abril-catalan (1.7 MB)
+ok 2022-4-67-revista-librerias-invierno-48pp-web (12.5 MB)
+ok 2022-4-67-catalan-revista-librerias-invierno-web (0.6 MB)
+ok 2022-3-66-revista-librerias-otono-web (9.3 MB)
+ok 2022-3-66-revista-librerias-otono-catalan-v2 (0.6 MB)
+ok 2022-2-65-revista-librerias-verano-web (6.5 MB)
+ok 2022-2-65-revista-librerias-verano-catalan-web (0.5 MB)
+ok 2022-1-64-revista-librerias-primavera-web (5.2 MB)
+ok 2022-1-64-revista-librerias-primavera-catalan-web (0.7 MB)
+ok 2021-4-63-revista-librerias-navidad-web (13.4 MB)
+ok 2021-4-63-revista-librerias-navidad-catalan-web (0.8 MB)
+ok 2021-3-62-revista-librerias-otono-web (10.2 MB)
+ok 2021-3-62-revista-librerias-otono-catalan-web (0.8 MB)
+ok 2021-2-61-revista-librerias-verano-web (6.9 MB)
+ok 2021-2-61-revista-librerias-verano-catalan-web (0.5 MB)
+ok 2021-1-60-revista-librerias-web (6.3 MB)
+ok 2020-3-59-revistalibrerias-web (19.8 MB)
+ok 2020-2-58-revistalibrerias-web (5.4 MB)
+ok 2020-1-57-revistalibrerias-web (6.4 MB)
+ok 2019-4-56-revistalibrerias-web (9.4 MB)
+ok 2019-3-55-revistalibrerias-web (4.7 MB)
+ok 2019-2-54-revistalibrerias-web (6.3 MB)
+ok 2019-53-int-revistalibreriasindependientes-abr-v7 (6.2 MB)
+ok 2018-52-int-revistalibreriasindependientes-dic-v7 (16.0 MB)
+ok 2018-51-revistalibreriasindependientes-v5 (3.3 MB)
+ok 2018-50-int-revistalibreriasindependientes-junio-v7 (4.5 MB)
+ok 2018-49-revistalibreriasindependientes-abr (17.8 MB)
+ok pdf-revista-volvemos-2017 (2.5 MB)
+ok pdf-revista-infantil-2017 (11.5 MB)
+ok pdf-revista-46-2017 (7.6 MB)
+Total: 358 MB en 58 PDFs
+
+> libreriasindependientes-web@0.1.0 build
+> astro build
+
+[2m10:20:39[22m [34m[content][39m Syncing content
+[2m10:20:39[22m [34m[content][39m Synced content
+[2m10:20:39[22m [34m[types][39m Generated [2m124ms[22m
+[2m10:20:39[22m [34m[build][39m output: [34m"static"[39m
+[2m10:20:39[22m [34m[build][39m mode: [34m"static"[39m
+[2m10:20:39[22m [34m[build][39m directory: [34m/home/runner/work/libreriasindependientes-web/libreriasindependientes-web/dist/[39m
+[2m10:20:39[22m [34m[build][39m Collecting build info...
+[2m10:20:39[22m [34m[build][39m [32m✓ Completed in 144ms.[39m
+[2m10:20:39[22m [34m[build][39m Building static entrypoints...
+[31m[1m10:20:40[22m [ERROR] [vite][39m [31m✗[39m Build failed in 678ms
+[vite]: Rollup failed to resolve import "@fontsource-variable/fraunces" from "/home/runner/work/libreriasindependientes-web/libreriasindependientes-web/src/layouts/Base.astro".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+  [1mStack trace:[22m
+[2m    at viteLog (file:///home/runner/work/libreriasindependientes-web/libreriasindependientes-web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:46504:15)
+    at onLog (file:///home/runner/work/libreriasindependientes-web/libreriasindependientes-web/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:46202:7)
+    at Object.logger [as onLog] (file:///home/runner/work/libreriasindependientes-web/libreriasindependientes-web/node_modules/rollup/dist/es/shared/node-entry.js:23714:9)
+    at file:///home/runner/work/libreriasindependientes-web/libreriasindependientes-web/node_modules/rollup/dist/es/shared/node-entry.js:22417:26[22m
